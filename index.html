@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>P2P System — TechEdge Manufacturing</title>
+  <style>
+    :root {
+      --primary: #1F3864;
+      --accent: #2E5C9A;
+      --light: #EBF3FB;
+      --success: #28a745;
+      --warning: #ffc107;
+      --danger: #dc3545;
+      --gray: #6c757d;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: #f0f4f9; color: #333; }
+
+    /* Sidebar */
+    .sidebar {
+      position: fixed; left: 0; top: 0; width: 220px; height: 100vh;
+      background: var(--primary); color: #fff; display: flex; flex-direction: column;
+      padding: 0; z-index: 100; overflow-y: auto;
+    }
+    .sidebar-logo {
+      padding: 20px 16px; background: rgba(0,0,0,0.25);
+      font-size: 14px; font-weight: bold; line-height: 1.3;
+    }
+    .sidebar-logo span { font-size: 11px; font-weight: normal; opacity: 0.7; display: block; }
+    .sidebar nav { flex: 1; padding: 12px 0; }
+    .nav-section { font-size: 10px; text-transform: uppercase; letter-spacing: 1px;
+      padding: 12px 16px 4px; opacity: 0.5; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 16px; cursor: pointer; font-size: 13px;
+      transition: background 0.15s; border-left: 3px solid transparent;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.1); }
+    .nav-item.active { background: rgba(255,255,255,0.15); border-left-color: #fff; font-weight: bold; }
+    .nav-item .badge {
+      margin-left: auto; background: var(--warning); color: #333;
+      border-radius: 10px; font-size: 10px; padding: 1px 7px; font-weight: bold;
+    }
+
+    /* Main */
+    .main { margin-left: 220px; padding: 24px; min-height: 100vh; }
+    .page-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid var(--light);
+    }
+    .page-header h1 { font-size: 22px; color: var(--primary); }
+    .page-header .tcode { font-size: 12px; color: var(--gray); background: var(--light);
+      padding: 4px 10px; border-radius: 12px; font-family: monospace; }
+
+    /* Cards */
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+    .stat-card {
+      background: #fff; border-radius: 10px; padding: 18px; box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      border-top: 3px solid var(--accent);
+    }
+    .stat-card .label { font-size: 11px; color: var(--gray); text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-card .value { font-size: 28px; font-weight: bold; color: var(--primary); margin: 4px 0; }
+    .stat-card .sub { font-size: 12px; color: var(--success); }
+
+    /* Section */
+    .section { background: #fff; border-radius: 10px; padding: 20px; margin-bottom: 20px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+    .section-title { font-size: 15px; font-weight: bold; color: var(--primary); margin-bottom: 16px;
+      display: flex; align-items: center; gap: 8px; }
+    .section-title .step-badge {
+      background: var(--primary); color: #fff; border-radius: 50%;
+      width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
+      font-size: 12px; flex-shrink: 0;
+    }
+
+    /* Form */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-group label { font-size: 12px; color: var(--gray); font-weight: bold; }
+    .form-group input, .form-group select, .form-group textarea {
+      border: 1px solid #d0d7e2; border-radius: 6px; padding: 8px 12px;
+      font-size: 13px; font-family: Arial; transition: border 0.15s;
+    }
+    .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--accent); }
+    .form-group.full { grid-column: 1 / -1; }
+
+    /* Button */
+    .btn {
+      padding: 9px 20px; border: none; border-radius: 6px; cursor: pointer;
+      font-size: 13px; font-weight: bold; font-family: Arial; transition: all 0.15s;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--accent); }
+    .btn-success { background: var(--success); color: #fff; }
+    .btn-warning { background: var(--warning); color: #333; }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-outline { background: transparent; color: var(--primary); border: 1.5px solid var(--primary); }
+    .btn-outline:hover { background: var(--light); }
+    .btn-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+
+    /* Table */
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { background: var(--primary); color: #fff; padding: 10px 12px; text-align: left; font-size: 12px; }
+    td { padding: 9px 12px; border-bottom: 1px solid #edf0f5; }
+    tr:hover td { background: var(--light); }
+
+    /* Status badge */
+    .status {
+      display: inline-block; padding: 3px 10px; border-radius: 12px;
+      font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.3px;
+    }
+    .status-open { background: #fff3cd; color: #856404; }
+    .status-approved { background: #d1e7dd; color: #155724; }
+    .status-pending { background: #cfe2ff; color: #084298; }
+    .status-received { background: #d1e7dd; color: #155724; }
+    .status-paid { background: #e2e3e5; color: #383d41; }
+    .status-partial { background: #ffe0b2; color: #bf360c; }
+
+    /* Flow diagram */
+    .flow { display: flex; align-items: center; gap: 0; margin: 12px 0; flex-wrap: wrap; }
+    .flow-step {
+      background: var(--light); border: 2px solid var(--accent); border-radius: 8px;
+      padding: 10px 14px; text-align: center; min-width: 110px;
+    }
+    .flow-step .tcode { font-size: 10px; font-family: monospace; color: var(--accent); font-weight: bold; }
+    .flow-step .label { font-size: 11px; margin-top: 3px; color: var(--primary); }
+    .flow-step.active { background: var(--primary); border-color: var(--primary); }
+    .flow-step.active .tcode { color: #aac4f0; }
+    .flow-step.active .label { color: #fff; }
+    .flow-step.done { background: #d1e7dd; border-color: var(--success); }
+    .flow-step.done .label { color: #155724; }
+    .flow-arrow { font-size: 20px; color: var(--gray); padding: 0 4px; }
+
+    /* Alert */
+    .alert { padding: 12px 16px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; }
+    .alert-info { background: #cfe2ff; color: #084298; border-left: 4px solid #084298; }
+    .alert-success { background: #d1e7dd; color: #155724; border-left: 4px solid var(--success); }
+    .alert-warning { background: #fff3cd; color: #856404; border-left: 4px solid var(--warning); }
+
+    /* Matching table */
+    .match-row td:last-child { font-weight: bold; }
+    .match-ok { color: var(--success); }
+    .match-fail { color: var(--danger); }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 0; border-bottom: 2px solid var(--light); margin-bottom: 20px; }
+    .tab {
+      padding: 10px 18px; cursor: pointer; font-size: 13px; border-bottom: 2px solid transparent;
+      margin-bottom: -2px; color: var(--gray);
+    }
+    .tab.active { border-bottom-color: var(--primary); color: var(--primary); font-weight: bold; }
+
+    .hidden { display: none; }
+    .mt16 { margin-top: 16px; }
+  </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    🏭 TechEdge Manufacturing
+    <span>SAP P2P System — TE01</span>
+  </div>
+  <nav>
+    <div class="nav-section">Dashboard</div>
+    <div class="nav-item active" onclick="showPage('dashboard')">📊 Overview</div>
+    <div class="nav-section">Procurement</div>
+    <div class="nav-item" onclick="showPage('pr')">📝 Purchase Requisition <span class="badge" id="pr-badge">3</span></div>
+    <div class="nav-item" onclick="showPage('po')">📦 Purchase Order</div>
+    <div class="nav-item" onclick="showPage('gr')">🏪 Goods Receipt</div>
+    <div class="nav-item" onclick="showPage('iv')">🧾 Invoice Verify</div>
+    <div class="nav-item" onclick="showPage('pay')">💳 Payment</div>
+    <div class="nav-section">Reports</div>
+    <div class="nav-item" onclick="showPage('report')">📈 Audit Trail</div>
+  </nav>
+</div>
+
+<!-- Main -->
+<div class="main">
+
+  <!-- DASHBOARD -->
+  <div id="page-dashboard">
+    <div class="page-header">
+      <h1>📊 Procure-to-Pay Dashboard</h1>
+      <span class="tcode">Company Code: TE01 | Plant: TE10</span>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="label">Open PRs</div>
+        <div class="value" id="stat-pr">3</div>
+        <div class="sub">↑ 2 awaiting approval</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Open POs</div>
+        <div class="value" id="stat-po">2</div>
+        <div class="sub">↑ 1 partially received</div>
+      </div>
+      <div class="stat-card" style="border-top-color: var(--success)">
+        <div class="label">GR This Month</div>
+        <div class="value" id="stat-gr">5</div>
+        <div class="sub" style="color:var(--success)">All matched ✓</div>
+      </div>
+      <div class="stat-card" style="border-top-color: var(--warning)">
+        <div class="label">Pending Invoices</div>
+        <div class="value" id="stat-inv">2</div>
+        <div class="sub" style="color:var(--warning)">₹1,40,000 pending</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">P2P Process Flow</div>
+      <div class="flow" id="flow-diagram">
+        <div class="flow-step done"><div class="tcode">ME51N</div><div class="label">Purchase<br>Requisition</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step done"><div class="tcode">ME54N</div><div class="label">PR<br>Approval</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step done"><div class="tcode">ME21N</div><div class="label">Purchase<br>Order</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step active"><div class="tcode">MIGO</div><div class="label">Goods<br>Receipt</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="tcode">MIRO</div><div class="label">Invoice<br>Verify</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="tcode">F-53</div><div class="label">Vendor<br>Payment</div></div>
+      </div>
+      <div class="alert alert-info mt16">Current active step: <strong>Goods Receipt (MIGO)</strong> — PO-1002 is awaiting GR posting for Steel Rods delivery.</div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Recent Activity</div>
+      <table>
+        <thead><tr><th>Document</th><th>Type</th><th>Material</th><th>Vendor</th><th>Amount (₹)</th><th>Status</th></tr></thead>
+        <tbody id="recent-activity">
+          <tr><td>PR-1001</td><td>Purchase Requisition</td><td>Steel Rods (ROH)</td><td>—</td><td>80,000</td><td><span class="status status-approved">Approved</span></td></tr>
+          <tr><td>PO-1001</td><td>Purchase Order</td><td>Steel Rods (ROH)</td><td>TechSupply Co.</td><td>80,000</td><td><span class="status status-received">GR Done</span></td></tr>
+          <tr><td>GR-5001</td><td>Goods Receipt</td><td>Steel Rods (ROH)</td><td>TechSupply Co.</td><td>80,000</td><td><span class="status status-approved">Posted</span></td></tr>
+          <tr><td>IV-3001</td><td>Invoice</td><td>Steel Rods (ROH)</td><td>TechSupply Co.</td><td>80,000</td><td><span class="status status-pending">Pending Pay</span></td></tr>
+          <tr><td>PR-1002</td><td>Purchase Requisition</td><td>Copper Wire (ROH)</td><td>—</td><td>60,000</td><td><span class="status status-open">Open</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- PURCHASE REQUISITION -->
+  <div id="page-pr" class="hidden">
+    <div class="page-header">
+      <h1>📝 Purchase Requisition</h1>
+      <span class="tcode">ME51N / ME54N</span>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab(this,'pr-create')">Create PR</div>
+      <div class="tab" onclick="switchTab(this,'pr-list')">PR List</div>
+    </div>
+
+    <div id="pr-create">
+      <div class="section">
+        <div class="section-title"><div class="step-badge">1</div> Header Information</div>
+        <div class="form-grid">
+          <div class="form-group"><label>Document Type</label><select><option>NB — Standard PR</option><option>ZNB — Urgent PR</option></select></div>
+          <div class="form-group"><label>PR Date</label><input type="date" id="pr-date"/></div>
+          <div class="form-group"><label>Requested By</label><input type="text" value="RAVI.SHARMA" /></div>
+          <div class="form-group"><label>Plant</label><select><option>TE10 — TechEdge Main Plant</option></select></div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title"><div class="step-badge">2</div> Line Item Details</div>
+        <div class="form-grid">
+          <div class="form-group"><label>Material Number</label><select id="pr-material"><option value="">Select Material</option><option value="MAT-001">MAT-001 — Steel Rods (ROH)</option><option value="MAT-002">MAT-002 — Copper Wire (ROH)</option><option value="MAT-003">MAT-003 — Plastic Granules (ROH)</option><option value="MAT-004">MAT-004 — Aluminium Sheets (ROH)</option></select></div>
+          <div class="form-group"><label>Storage Location</label><select><option>TW01 — Main Warehouse</option></select></div>
+          <div class="form-group"><label>Quantity Required</label><input type="number" id="pr-qty" placeholder="e.g. 100" min="1"/></div>
+          <div class="form-group"><label>Unit of Measure</label><select><option>KG</option><option>EA</option><option>MT</option><option>L</option></select></div>
+          <div class="form-group"><label>Required Date</label><input type="date" id="pr-reqdate"/></div>
+          <div class="form-group"><label>Estimated Price (₹/unit)</label><input type="number" id="pr-price" placeholder="e.g. 800"/></div>
+          <div class="form-group"><label>Cost Centre</label><select><option>CC-MFG-001 — Manufacturing</option><option>CC-ADM-001 — Admin</option><option>CC-IT-001 — IT</option></select></div>
+          <div class="form-group"><label>GL Account</label><input type="text" value="40010001 — Raw Material Purchases" readonly style="background:#f5f5f5"/></div>
+          <div class="form-group full"><label>Reason / Justification</label><textarea rows="2" placeholder="State reason for procurement request..."></textarea></div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="createPR()">💾 Save PR (ME51N)</button>
+          <button class="btn btn-outline" onclick="clearPR()">🗑 Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="pr-list" class="hidden">
+      <div class="section">
+        <div class="section-title">Purchase Requisition List</div>
+        <table>
+          <thead><tr><th>PR No.</th><th>Material</th><th>Qty</th><th>Est. Value (₹)</th><th>Required Date</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody id="pr-table-body">
+            <tr><td>PR-1001</td><td>Steel Rods</td><td>100 KG</td><td>80,000</td><td>2024-08-10</td><td><span class="status status-approved">Approved</span></td><td>—</td></tr>
+            <tr><td>PR-1002</td><td>Copper Wire</td><td>50 KG</td><td>60,000</td><td>2024-08-15</td><td><span class="status status-open">Pending</span></td><td><button class="btn btn-success" style="padding:4px 10px;font-size:11px" onclick="approvePR(this,'PR-1002')">✓ Approve</button></td></tr>
+            <tr><td>PR-1003</td><td>Plastic Granules</td><td>200 KG</td><td>40,000</td><td>2024-08-20</td><td><span class="status status-open">Pending</span></td><td><button class="btn btn-success" style="padding:4px 10px;font-size:11px" onclick="approvePR(this,'PR-1003')">✓ Approve</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- PURCHASE ORDER -->
+  <div id="page-po" class="hidden">
+    <div class="page-header">
+      <h1>📦 Purchase Order</h1>
+      <span class="tcode">ME21N / ME2N</span>
+    </div>
+    <div class="section">
+      <div class="alert alert-info">A Purchase Order is created with reference to an approved PR. The system carries forward all details automatically.</div>
+      <div class="section-title"><div class="step-badge">3</div> Create PO from Approved PR</div>
+      <div class="form-grid">
+        <div class="form-group"><label>Reference PR No.</label><select id="po-pr-ref"><option value="">Select Approved PR</option><option value="PR-1001">PR-1001 — Steel Rods (100 KG)</option></select></div>
+        <div class="form-group"><label>Vendor</label><select id="po-vendor"><option value="">Select Vendor</option><option value="V001">V001 — TechSupply Co. (NET30)</option><option value="V002">V002 — MetalWorks Ltd. (NET45)</option></select></div>
+        <div class="form-group"><label>PO Date</label><input type="date" id="po-date"/></div>
+        <div class="form-group"><label>Delivery Date</label><input type="date" id="po-deldate"/></div>
+        <div class="form-group"><label>Agreed Price (₹/unit)</label><input type="number" id="po-price" placeholder="From Info Record"/></div>
+        <div class="form-group"><label>Payment Terms</label><input type="text" value="NET30 — Payment within 30 days" readonly style="background:#f5f5f5"/></div>
+        <div class="form-group"><label>Incoterms</label><select><option>DDP — Delivered Duty Paid</option><option>EXW — Ex Works</option><option>FOB — Free on Board</option></select></div>
+        <div class="form-group"><label>Currency</label><select><option>INR — Indian Rupee</option><option>USD — US Dollar</option></select></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="createPO()">💾 Create PO (ME21N)</button>
+        <button class="btn btn-outline">📤 Send to Vendor</button>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-title">Open Purchase Orders</div>
+      <table>
+        <thead><tr><th>PO No.</th><th>PR Ref.</th><th>Vendor</th><th>Material</th><th>Qty</th><th>Net Value (₹)</th><th>Del. Date</th><th>Status</th></tr></thead>
+        <tbody id="po-table-body">
+          <tr><td>PO-1001</td><td>PR-1001</td><td>TechSupply Co.</td><td>Steel Rods</td><td>100 KG</td><td>80,000</td><td>2024-08-10</td><td><span class="status status-received">GR Done</span></td></tr>
+          <tr id="po-1002-row"><td>PO-1002</td><td>PR-1002</td><td>MetalWorks Ltd.</td><td>Copper Wire</td><td>50 KG</td><td>60,000</td><td>2024-08-20</td><td><span class="status status-open">Open</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- GOODS RECEIPT -->
+  <div id="page-gr" class="hidden">
+    <div class="page-header">
+      <h1>🏪 Goods Receipt</h1>
+      <span class="tcode">MIGO — Movement Type 101</span>
+    </div>
+    <div class="section">
+      <div class="alert alert-info">Goods Receipt records the physical arrival of goods at the plant. Stock is updated and GR/IR clearing account is credited automatically.</div>
+      <div class="section-title"><div class="step-badge">4</div> Post Goods Receipt against PO</div>
+      <div class="form-grid">
+        <div class="form-group"><label>Reference PO No.</label><select id="gr-po-ref"><option>PO-1002 — Copper Wire (50 KG)</option><option>PO-1001 — Steel Rods (Remaining)</option></select></div>
+        <div class="form-group"><label>Movement Type</label><input type="text" value="101 — GR for PO" readonly style="background:#f5f5f5"/></div>
+        <div class="form-group"><label>GR Date</label><input type="date" id="gr-date"/></div>
+        <div class="form-group"><label>Delivery Note No.</label><input type="text" placeholder="Vendor delivery challan no."/></div>
+        <div class="form-group"><label>Quantity Received</label><input type="number" id="gr-qty" placeholder="e.g. 50"/></div>
+        <div class="form-group"><label>Storage Location</label><select><option>TW01 — Main Warehouse</option></select></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-success" onclick="postGR()">✅ Post GR (MIGO)</button>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-title">GR History</div>
+      <table>
+        <thead><tr><th>GR Doc.</th><th>PO Ref.</th><th>Material</th><th>Qty Received</th><th>Value (₹)</th><th>GR Date</th><th>Status</th></tr></thead>
+        <tbody id="gr-table-body">
+          <tr><td>GR-5001</td><td>PO-1001</td><td>Steel Rods</td><td>100 KG</td><td>80,000</td><td>2024-08-10</td><td><span class="status status-approved">Posted</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- INVOICE VERIFICATION -->
+  <div id="page-iv" class="hidden">
+    <div class="page-header">
+      <h1>🧾 Invoice Verification</h1>
+      <span class="tcode">MIRO — Logistics Invoice Verification</span>
+    </div>
+    <div class="section">
+      <div class="alert alert-warning">⚠️ 3-Way Match: PO ↔ GR ↔ Invoice. Any price/quantity variance beyond tolerance will block payment.</div>
+      <div class="section-title"><div class="step-badge">5</div> Enter Vendor Invoice</div>
+      <div class="form-grid">
+        <div class="form-group"><label>Invoice Date</label><input type="date" id="iv-date"/></div>
+        <div class="form-group"><label>Reference PO</label><select id="iv-po"><option>PO-1001 — Steel Rods</option></select></div>
+        <div class="form-group"><label>Vendor Invoice No.</label><input type="text" id="iv-invno" placeholder="e.g. TS/INV/2024/0421"/></div>
+        <div class="form-group"><label>Invoice Amount (₹)</label><input type="number" id="iv-amount" placeholder="e.g. 80000"/></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="verifyInvoice()">🔍 Verify & Post (MIRO)</button>
+      </div>
+    </div>
+
+    <div class="section" id="matching-result" style="display:none">
+      <div class="section-title">3-Way Matching Result</div>
+      <table class="match-row">
+        <thead><tr><th>Parameter</th><th>PO Value</th><th>GR Value</th><th>Invoice Value</th><th>Match</th></tr></thead>
+        <tbody>
+          <tr><td>Quantity</td><td>100 KG</td><td>100 KG</td><td>100 KG</td><td><span class="match-ok">✅ Match</span></td></tr>
+          <tr><td>Unit Price (₹)</td><td>800</td><td>800</td><td id="iv-match-price">—</td><td id="iv-match-result"><span class="match-ok">✅ Match</span></td></tr>
+          <tr><td>Total Value (₹)</td><td>80,000</td><td>80,000</td><td id="iv-match-total">—</td><td><span class="match-ok">✅ No Variance</span></td></tr>
+        </tbody>
+      </table>
+      <div class="alert alert-success mt16" id="iv-alert">✅ 3-Way match successful! Invoice posted. Accounting document generated. Vendor payable: ₹80,000.</div>
+    </div>
+  </div>
+
+  <!-- PAYMENT -->
+  <div id="page-pay" class="hidden">
+    <div class="page-header">
+      <h1>💳 Vendor Payment</h1>
+      <span class="tcode">F-53 / F110</span>
+    </div>
+    <div class="section">
+      <div class="section-title"><div class="step-badge">6</div> Process Vendor Payment</div>
+      <div class="form-grid">
+        <div class="form-group"><label>Vendor</label><select><option>V001 — TechSupply Co.</option></select></div>
+        <div class="form-group"><label>Company Code</label><input type="text" value="TE01" readonly style="background:#f5f5f5"/></div>
+        <div class="form-group"><label>Payment Date</label><input type="date" id="pay-date"/></div>
+        <div class="form-group"><label>House Bank</label><select><option>HDFC — HDFC Bank Acc. TE01</option><option>SBI — SBI Acc. TE01</option></select></div>
+        <div class="form-group"><label>Open Invoice</label><select><option>IV-3001 — ₹80,000 (Due: 2024-09-10)</option></select></div>
+        <div class="form-group"><label>Payment Amount (₹)</label><input type="number" id="pay-amount" value="80000"/></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-success" onclick="processPayment()">💰 Post Payment (F-53)</button>
+        <button class="btn btn-outline">🔄 Auto Payment Run (F110)</button>
+      </div>
+    </div>
+    <div class="section" id="pay-result" style="display:none">
+      <div class="alert alert-success">
+        ✅ Payment document posted successfully!<br>
+        <strong>Payment Doc No:</strong> PAY-9001 &nbsp;|&nbsp; <strong>Clearing Doc:</strong> CLR-8001<br>
+        <strong>Vendor Account (K) Cleared:</strong> ₹80,000 &nbsp;|&nbsp; <strong>Bank Account (S) Credited:</strong> ₹80,000<br>
+        <strong>P2P Cycle Complete!</strong> 🎉
+      </div>
+    </div>
+  </div>
+
+  <!-- AUDIT TRAIL / REPORT -->
+  <div id="page-report" class="hidden">
+    <div class="page-header">
+      <h1>📈 Audit Trail & Document Flow</h1>
+      <span class="tcode">ME2M / MB52 / FBL1N</span>
+    </div>
+    <div class="section">
+      <div class="section-title">Complete P2P Document Chain — PO-1001</div>
+      <table>
+        <thead><tr><th>Step</th><th>Document No.</th><th>Type</th><th>T-Code</th><th>Posted By</th><th>Date</th><th>Amount (₹)</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>PR-1001</td><td>Purchase Requisition</td><td>ME51N</td><td>RAVI.SHARMA</td><td>2024-08-01</td><td>80,000</td><td><span class="status status-approved">Approved</span></td></tr>
+          <tr><td>2</td><td>PO-1001</td><td>Purchase Order</td><td>ME21N</td><td>PRIYA.BUY</td><td>2024-08-02</td><td>80,000</td><td><span class="status status-approved">Released</span></td></tr>
+          <tr><td>3</td><td>GR-5001</td><td>Goods Receipt</td><td>MIGO</td><td>ANIL.STORES</td><td>2024-08-10</td><td>80,000</td><td><span class="status status-approved">Posted</span></td></tr>
+          <tr><td>4</td><td>MATDOC-5001</td><td>Material Document</td><td>MB03</td><td>System</td><td>2024-08-10</td><td>—</td><td><span class="status status-approved">Auto</span></td></tr>
+          <tr><td>5</td><td>ACDOC-6001</td><td>FI Accounting Doc</td><td>FB03</td><td>System</td><td>2024-08-10</td><td>80,000</td><td><span class="status status-approved">Auto</span></td></tr>
+          <tr><td>6</td><td>IV-3001</td><td>Invoice (MIRO)</td><td>MIRO</td><td>SUNITA.FIN</td><td>2024-08-12</td><td>80,000</td><td><span class="status status-pending">Pending Pay</span></td></tr>
+          <tr><td>7</td><td>PAY-9001</td><td>Payment Doc</td><td>F-53</td><td>MOHAN.AP</td><td>—</td><td>80,000</td><td><span class="status status-open">Due</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="section">
+      <div class="section-title">Accounting Entries — GR/IR Logic</div>
+      <table>
+        <thead><tr><th>Event</th><th>Account</th><th>Dr / Cr</th><th>Amount (₹)</th></tr></thead>
+        <tbody>
+          <tr><td rowspan="2" style="font-weight:bold;vertical-align:middle">Goods Receipt (MIGO)</td><td>40010001 — Stock Account</td><td>Dr</td><td>80,000</td></tr>
+          <tr><td>29000001 — GR/IR Clearing Account</td><td>Cr</td><td>80,000</td></tr>
+          <tr><td rowspan="2" style="font-weight:bold;vertical-align:middle">Invoice Verify (MIRO)</td><td>29000001 — GR/IR Clearing Account</td><td>Dr</td><td>80,000</td></tr>
+          <tr><td>16000001 — Vendor Payables (TechSupply)</td><td>Cr</td><td>80,000</td></tr>
+          <tr><td rowspan="2" style="font-weight:bold;vertical-align:middle">Payment (F-53)</td><td>16000001 — Vendor Payables</td><td>Dr</td><td>80,000</td></tr>
+          <tr><td>11300001 — Bank Account (HDFC)</td><td>Cr</td><td>80,000</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ---- Nav ----
+let prList = [];
+let poList = [];
+let grList = [];
+
+function showPage(id) {
+  document.querySelectorAll('[id^="page-"]').forEach(el => el.classList.add('hidden'));
+  document.getElementById('page-' + id).classList.remove('hidden');
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+}
+
+function switchTab(el, targetId) {
+  el.closest('.tabs').querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  const parent = el.closest('[id^="page-"]');
+  parent.querySelectorAll('[id^="pr-"]').forEach(d => {
+    if (d.id !== 'pr-table-body' && (d.id === 'pr-create' || d.id === 'pr-list')) d.classList.add('hidden');
+  });
+  document.getElementById(targetId).classList.remove('hidden');
+}
+
+// ---- Set today's date in all date fields ----
+window.onload = () => {
+  const today = new Date().toISOString().split('T')[0];
+  document.querySelectorAll('input[type="date"]').forEach(el => { if (!el.value) el.value = today; });
+};
+
+// ---- PR ----
+let prCounter = 1004;
+function createPR() {
+  const mat = document.getElementById('pr-material').value;
+  const qty = document.getElementById('pr-qty').value;
+  const price = document.getElementById('pr-price').value;
+  if (!mat || !qty || !price) { alert('Please fill Material, Quantity and Price.'); return; }
+  const matName = document.getElementById('pr-material').selectedOptions[0].text.split('—')[1].trim();
+  const total = (parseFloat(qty) * parseFloat(price)).toLocaleString('en-IN');
+  const prNo = 'PR-' + prCounter++;
+  const date = document.getElementById('pr-reqdate').value;
+  const tbody = document.getElementById('pr-table-body');
+  const row = tbody.insertRow(0);
+  row.innerHTML = `<td>${prNo}</td><td>${matName}</td><td>${qty} KG</td><td>${total}</td><td>${date}</td><td><span class="status status-open">Pending</span></td><td><button class="btn btn-success" style="padding:4px 10px;font-size:11px" onclick="approvePR(this,'${prNo}')">✓ Approve</button></td>`;
+  // update badge
+  const badge = document.getElementById('pr-badge');
+  badge.textContent = parseInt(badge.textContent) + 1;
+  alert('✅ Purchase Requisition ' + prNo + ' created successfully! (T-Code: ME51N)');
+  // Switch to list
+  document.querySelector('.tab:last-child').click();
+  clearPR();
+}
+
+function clearPR() {
+  document.getElementById('pr-material').value = '';
+  document.getElementById('pr-qty').value = '';
+  document.getElementById('pr-price').value = '';
+}
+
+function approvePR(btn, prNo) {
+  const row = btn.closest('tr');
+  row.cells[5].innerHTML = '<span class="status status-approved">Approved</span>';
+  row.cells[6].innerHTML = '—';
+  const badge = document.getElementById('pr-badge');
+  badge.textContent = Math.max(0, parseInt(badge.textContent) - 1);
+  alert('✅ PR ' + prNo + ' approved! (T-Code: ME54N)\nRelease indicator set. PR is now available for PO conversion.');
+}
+
+// ---- PO ----
+let poCounter = 1003;
+function createPO() {
+  const pr = document.getElementById('po-pr-ref').value;
+  const vendor = document.getElementById('po-vendor').value;
+  const price = document.getElementById('po-price').value;
+  if (!pr || !vendor) { alert('Please select PR reference and Vendor.'); return; }
+  const poNo = 'PO-' + poCounter++;
+  const tbody = document.getElementById('po-table-body');
+  const row = tbody.insertRow(0);
+  const vendorName = document.getElementById('po-vendor').selectedOptions[0].text.split('—')[1]?.trim().split('(')[0].trim() || vendor;
+  row.innerHTML = `<td>${poNo}</td><td>${pr}</td><td>${vendorName}</td><td>Steel Rods</td><td>100 KG</td><td>${price ? (parseFloat(price)*100).toLocaleString('en-IN') : '80,000'}</td><td>${document.getElementById('po-deldate').value}</td><td><span class="status status-open">Open</span></td>`;
+  alert('✅ Purchase Order ' + poNo + ' created! (T-Code: ME21N)\nPO sent to vendor ' + vendorName + '.');
+}
+
+// ---- GR ----
+let grCounter = 5002;
+function postGR() {
+  const qty = document.getElementById('gr-qty').value;
+  if (!qty) { alert('Please enter quantity received.'); return; }
+  const grNo = 'GR-' + grCounter++;
+  const tbody = document.getElementById('gr-table-body');
+  const row = tbody.insertRow(0);
+  row.innerHTML = `<td>${grNo}</td><td>PO-1002</td><td>Copper Wire</td><td>${qty} KG</td><td>${(parseFloat(qty)*1200).toLocaleString('en-IN')}</td><td>${document.getElementById('gr-date').value}</td><td><span class="status status-approved">Posted</span></td>`;
+  document.getElementById('stat-gr').textContent = parseInt(document.getElementById('stat-gr').textContent) + 1;
+  alert(`✅ Goods Receipt ${grNo} posted! (T-Code: MIGO)\nMaterial Document auto-created.\nStock updated: +${qty} KG Copper Wire in TW01.\nGR/IR Clearing Account credited.`);
+}
+
+// ---- Invoice ----
+function verifyInvoice() {
+  const amount = document.getElementById('iv-amount').value;
+  if (!amount) { alert('Please enter invoice amount.'); return; }
+  const unitPrice = parseFloat(amount) / 100;
+  document.getElementById('iv-match-price').textContent = unitPrice.toLocaleString('en-IN');
+  document.getElementById('iv-match-total').textContent = parseFloat(amount).toLocaleString('en-IN');
+  const isMatch = Math.abs(parseFloat(amount) - 80000) < 100;
+  document.getElementById('iv-match-result').innerHTML = isMatch
+    ? '<span class="match-ok">✅ Match</span>'
+    : '<span class="match-fail">❌ Variance!</span>';
+  document.getElementById('iv-alert').className = isMatch ? 'alert alert-success mt16' : 'alert alert-warning mt16';
+  document.getElementById('iv-alert').textContent = isMatch
+    ? '✅ 3-Way match successful! Invoice posted. Accounting document generated. Vendor payable: ₹' + parseFloat(amount).toLocaleString('en-IN') + '.'
+    : '⚠️ Price variance detected! Invoice is blocked for payment. Contact vendor to issue credit note.';
+  document.getElementById('matching-result').style.display = 'block';
+}
+
+// ---- Payment ----
+function processPayment() {
+  const amount = document.getElementById('pay-amount').value || 80000;
+  document.getElementById('pay-result').style.display = 'block';
+  document.getElementById('stat-inv').textContent = Math.max(0, parseInt(document.getElementById('stat-inv').textContent) - 1);
+  alert(`✅ Payment of ₹${parseFloat(amount).toLocaleString('en-IN')} posted! (T-Code: F-53)\nVendor Account Cleared. P2P Cycle Complete! 🎉`);
+}
+</script>
+</body>
+</html>
